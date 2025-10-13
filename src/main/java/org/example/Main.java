@@ -29,7 +29,7 @@ public class Main {
         if (choice == 1) {
             // 选项1：查询可用性 -> facility id + booking time
             System.out.print("Enter facility id (integer): ");
-            String facilityId = scanner.nextLine();
+            int facilityId = Integer.parseInt(scanner.nextLine());
 
             // 修改处：分开输入日期和时间
             System.out.print("Enter booking date (format: yyyymmdd): ");
@@ -47,6 +47,24 @@ public class Main {
             System.out.println("Booking Time: " + bookingTime);
             System.out.println("-----------------------------");
             System.out.println("Availability request recorded (not sent yet).");
+
+
+            long requestId = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);  //生成requestID
+            buf.putLong(requestId);
+            long BookingId = 0L;  //生成bookingID
+            buf.putLong(BookingId);
+            buf.putInt(facilityId);
+            buf.putInt(bookingDate);
+            buf.putInt(bookingTime);
+            buf.putInt('1'); //表示为查询
+
+            DatagramSocket socket = new DatagramSocket();
+            InetAddress serverAddr = InetAddress.getByName("127.0.0.1");  //目标地址
+            int serverPort = 9000; //目标地址
+            byte[] data = buf.array();
+            DatagramPacket packet = new DatagramPacket(data, buf.position(), serverAddr, serverPort);
+            socket.send(packet);
+            socket.close();
 
         } else if (choice == 2) {
             // 选项2：预订 -> facility id + booking time
@@ -77,7 +95,7 @@ public class Main {
             buf.putInt(facilityId);
             buf.putInt(bookingDate);
             buf.putInt(bookingTime);
-            buf.putInt('2'); //表示为新增
+            buf.putInt(2); //表示为新增
 
             DatagramSocket socket = new DatagramSocket();
             InetAddress serverAddr = InetAddress.getByName("127.0.0.1");  //目标地址
