@@ -214,12 +214,43 @@ public class Client {
         byte[] recvBuf = new byte[1024];
         DatagramPacket recvPacket = new DatagramPacket(recvBuf, recvBuf.length);
 
-        socket.receive(recvPacket);
+        socket.receive(recvPacket);  //  只接收一次
         System.out.println(" Got response from server!");
 
-        socket.close();
-    }
+        // ===== 解析响应 =====
+        ByteBuffer resp = ByteBuffer.wrap(recvPacket.getData(), 0, recvPacket.getLength());
+        int respId = resp.getInt();
+        int respCode = resp.get() & 0xFF;
+        int respPayloadLen = resp.getInt();
 
+        if (respCode == 0 && respPayloadLen > 0) {
+            System.out.println("\n Query Results:");
+            int dayCount = resp.getShort() & 0xFFFF;
+
+            for (int i = 0; i < dayCount; i++) {
+                int dayIndex = resp.get() & 0xFF;
+                int intervalCount = resp.getShort() & 0xFFFF;
+
+                String[] dayNames = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+                System.out.println("  Day " + dayIndex + " (" + dayNames[dayIndex] + "):");
+
+                if (intervalCount == 0) {
+                    System.out.println("     No bookings - Available all day!");
+                } else {
+                    for (int j = 0; j < intervalCount; j++) {
+                        int start = resp.getShort() & 0xFFFF;
+                        int end = resp.getShort() & 0xFFFF;
+                        System.out.printf("     Booked: %02d:%02d - %02d:%02d\n",
+                                start / 60, start % 60, end / 60, end % 60);
+                    }
+                }
+            }
+        } else if (respCode != 0) {
+            System.out.println(" Query failed! Error code: " + respCode);
+        }
+
+        socket.close();  //
+    }
     private static void handleBooking(Scanner scanner) throws Exception {
         System.out.println("┌─ Make a Booking Here─────────────────────────┐");
         System.out.println();
