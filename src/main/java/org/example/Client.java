@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
 
+/// v2
 public class Client {
     public static void main(String[] args) throws Exception {
         Scanner scanner = new Scanner(System.in);
